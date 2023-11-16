@@ -1,0 +1,143 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot . '/grade/export/lib.php');
+
+/**
+ * Export for xls files.
+ *
+ * @package   gradeexport_banner
+ * @copyright  2023 Matt Davidson
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class grade_export_xls extends grade_export {
+    /**
+     * Constructor should set up all the private variables ready to be pulled
+     * @param object $course
+     * @param int $groupid id of selected group, 0 means all
+     * @param stdClass $formdata The validated data from the grade export form.
+     */
+    public function __construct($course, $groupid, $formdata) {
+        parent::__construct($course, $groupid, $formdata);
+
+        // Overrides.
+        $this->usercustomfields = true;
+    }
+
+    /**
+     * To be implemented by child classes
+     */
+    public function print_grades() {
+        global $CFG;
+        require_once($CFG->dirroot.'/lib/excellib.class.php');
+
+        $exporttracking = $this->track_exports();
+
+        $strgrades = get_string('grades');
+
+        // If this file was requested from a form, then mark download as complete (before sending headers).
+        \core_form\util::form_download_complete();
+
+        // Calculate file name.
+        $shortname = format_string($this->course->shortname, true, ['context' => context_course::instance($this->course->id)]);
+        $downloadfilename = clean_filename("$shortname $strgrades.xls");
+
+        // Get term and CRN.
+        $coursecodes = explode("-", $this->course->idnumber);
+        $term = $coursecodes[0];
+        $crn = $coursecodes[1];
+
+        // Creating a workbook.
+        $workbook = new MoodleExcelWorkbook("-");
+        // Sending HTTP headers.
+        $workbook->send($downloadfilename);
+        // Adding the worksheet.
+        $myxls = $workbook->add_worksheet($strgrades);
+
+        // Print names of all the fields.
+        $profilefieldsfirst = [(object)["fullname" => "Term Code", "customid" => true, "default" => $term],
+                                (object)["fullname" => "CRN", "customid" => true, "default" => $crn],
+                                (object)["fullname" => "Student ID", "shortname" => "idnumber"],
+        ];
+
+        foreach ($profilefieldsfirst as $id => $field) {
+            $myxls->write_string(0, $id, $field->fullname);
+        }
+
+        $pos = count($profilefieldsfirst);
+        $myxls->write_string(0, $pos++, "Final Grade");
+
+        // Print names of all the fields.
+        $profilefieldssecond = [(object)["fullname" => "Last Attended Date", "customid" => true, "default" => ""],
+                                 (object)["fullname" => "Incomplete Final Grade", "customid" => true, "default" => ""],
+                                 (object)["fullname" => "Extension Date", "customid" => true, "default" => ""],
+        ];
+
+        foreach ($profilefieldssecond as $id => $field) {
+            $myxls->write_string(0, $pos++, $field->fullname);
+        }
+
+        // Print all the lines of data.
+        $i = 0;
+        $geub = new grade_export_update_buffer();
+        $gui = new graded_users_iterator($this->course, $this->columns, $this->groupid);
+        $gui->require_active_enrolment($this->onlyactive);
+        $gui->allow_user_custom_fields($this->usercustomfields);
+        $gui->init();
+        while ($userdata = $gui->next_user()) {
+            $i++;
+            $user = $userdata->user;
+
+            foreach ($profilefieldsfirst as $id => $field) {
+                $fieldvalue = grade_helper::get_user_field_value($user, $field);
+                $myxls->write_string($i, $id, $fieldvalue);
+            }
+            $j = count($profilefieldsfirst);
+            if (!$this->onlyactive) {
+                $issuspended = ($user->suspendedenrolment) ? get_string('yes') : '';
+                $myxls->write_string($i, $j++, $issuspended);
+            }
+            foreach ($userdata->grades as $itemid => $grade) {
+                if ($exporttracking) {
+                    $status = $geub->track($grade);
+                }
+                foreach ($this->displaytype as $gradedisplayconst) {
+                    $gradestr = $this->format_grade($grade, $gradedisplayconst);
+                    if (is_numeric($gradestr)) {
+                        $myxls->write_number($i, $j++, $gradestr);
+                    } else {
+                        $myxls->write_string($i, $j++, $gradestr);
+                    }
+                }
+            }
+            // Last attended blank.
+            $myxls->write_string($i, $j++, "");
+            // Incomplete Final Grade blank.
+            $myxls->write_string($i, $j++, "");
+            // Extension Date.
+            $myxls->write_string($i, $j++, "");
+        }
+        $gui->close();
+        $geub->close();
+
+        // Close the workbook.
+        $workbook->close();
+
+        exit;
+    }
+}
