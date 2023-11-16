@@ -77,7 +77,7 @@ echo '<div style="text-align:center">
         <button class="bannerbutton btn btn-primary"
                 style="display: none;"
                 type="submit"
-                onclick="$(\'.mform\').first().trigger(\'submit\');">
+                onclick="$(\'#page-content .mform\').first().trigger(\'submit\');">
             Download
         </button>
       </div>
