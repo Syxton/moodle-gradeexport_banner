@@ -41,8 +41,9 @@ class grade_export_xls extends grade_export {
 
     /**
      * To be implemented by child classes
+     * @param int $btype Midterm or Final Grade type export.
      */
-    public function print_grades() {
+    public function print_grades(int $btype = 1) {
         global $CFG;
         require_once($CFG->dirroot.'/lib/excellib.class.php');
 
@@ -80,17 +81,21 @@ class grade_export_xls extends grade_export {
         }
 
         $pos = count($profilefieldsfirst);
-        $myxls->write_string(0, $pos++, "Final Grade");
+        $gradetype = $btype == 1 ? "Midterm Grade" : "Final Grade";
+        $myxls->write_string(0, $pos++, $gradetype);
 
-        // Print names of all the fields.
-        $profilefieldssecond = [(object)["fullname" => "Last Attended Date", "customid" => true, "default" => ""],
-                                 (object)["fullname" => "Incomplete Final Grade", "customid" => true, "default" => ""],
-                                 (object)["fullname" => "Extension Date", "customid" => true, "default" => ""],
-        ];
+        if ($btype !== 1) { // Only on Final Grade export types.
+            // Print names of all the fields.
+            $profilefieldssecond = [(object)["fullname" => "Last Attended Date", "customid" => true, "default" => ""],
+                                    (object)["fullname" => "Incomplete Final Grade", "customid" => true, "default" => ""],
+                                    (object)["fullname" => "Extension Date", "customid" => true, "default" => ""],
+            ];
 
-        foreach ($profilefieldssecond as $id => $field) {
-            $myxls->write_string(0, $pos++, $field->fullname);
+            foreach ($profilefieldssecond as $id => $field) {
+                $myxls->write_string(0, $pos++, $field->fullname);
+            }
         }
+
 
         // Print all the lines of data.
         $i = 0;
@@ -125,12 +130,15 @@ class grade_export_xls extends grade_export {
                     }
                 }
             }
-            // Last attended blank.
-            $myxls->write_string($i, $j++, "");
-            // Incomplete Final Grade blank.
-            $myxls->write_string($i, $j++, "");
-            // Extension Date.
-            $myxls->write_string($i, $j++, "");
+
+            if ($btype !== 1) { // Only on Final Grade export types.
+                // Last attended blank.
+                $myxls->write_string($i, $j++, "");
+                // Incomplete Final Grade blank.
+                $myxls->write_string($i, $j++, "");
+                // Extension Date.
+                $myxls->write_string($i, $j++, "");
+            }
         }
         $gui->close();
         $geub->close();

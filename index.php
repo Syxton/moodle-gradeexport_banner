@@ -69,6 +69,21 @@ if ($groupmode == SEPARATEGROUPS && !$currentgroup && !has_capability('moodle/si
 
 groups_print_course_menu($course, 'index.php?id=' . $id);
 echo '<div class="clearer"></div>';
+echo '<div id="fitem_id_bannertype" class="form-group row fitem">
+        <div class="col-md-1 col-form-label d-flex pb-0 pr-md-0"> 
+        </div>
+        <div class="col-md-2 col-form-label d-flex pb-0 pr-md-0"> 
+            <label id="id_bannertype_label" class="d-inline word-break" for="id_bannertype">
+                Export Type
+            </label>
+        </div>
+        <div class="col-md-9 form-inline align-items-start felement" data-fieldtype="select">
+            <select id="id_bannertype" class="custom-select mb-1 mb-md-0 mr-md-2">
+                <option value="1" selected>Midterm Grade</option>
+                <option value="2">Final Grade</option>
+            </select>
+        </div>
+      </div>';
 echo '<div style="display: none">';
 $mform->display();
 echo '</div>';
@@ -77,12 +92,18 @@ echo '<div style="text-align:center">
         <button class="bannerbutton btn btn-primary"
                 style="display: none;"
                 type="submit"
-                onclick="$(\'#page-content .mform\').first().trigger(\'submit\');">
+                onclick="$(\'#btype\').val($(\'#id_bannertype\').val()); $(\'#page-content .mform\').first().trigger(\'submit\');">
             Download
         </button>
       </div>
       <script>
         jQuery(window).on("load", function() {
+            $("<input>").attr({
+                type: "hidden",
+                id: "btype",
+                name: "btype"
+            }).appendTo("#page-content .mform").first();
+
             // Deselect everything.
             $("input:checkbox").prop("checked", false);
 

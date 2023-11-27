@@ -42,6 +42,8 @@ require_capability('gradeexport/xls:view', $context);
 // We need to call this method here before any print otherwise the menu won't display.
 // If you use this method without this check, will break the direct grade exporting (without publishing).
 $key = optional_param('key', '', PARAM_RAW);
+$btype = optional_param('btype', 1, PARAM_INT);
+
 if (!empty($CFG->gradepublishing) && !empty($key)) {
     $actionbar = new \core_grades\output\export_publish_action_bar($context, 'xls');
     print_grade_page_head($COURSE->id, 'export', 'xls',
@@ -66,6 +68,6 @@ if (!empty($CFG->gradepublishing) && !empty($key)) {
 } else {
     $event = \gradeexport_banner\event\grade_exported::create(['context' => $context]);
     $event->trigger();
-    $export->print_grades();
+    $export->print_grades($btype);
 }
 
