@@ -96,7 +96,6 @@ class grade_export_xls extends grade_export {
             }
         }
 
-
         // Print all the lines of data.
         $i = 0;
         $geub = new grade_export_update_buffer();

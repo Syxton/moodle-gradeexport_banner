@@ -70,9 +70,9 @@ if ($groupmode == SEPARATEGROUPS && !$currentgroup && !has_capability('moodle/si
 groups_print_course_menu($course, 'index.php?id=' . $id);
 echo '<div class="clearer"></div>';
 echo '<div id="fitem_id_bannertype" class="form-group row fitem">
-        <div class="col-md-1 col-form-label d-flex pb-0 pr-md-0"> 
+        <div class="col-md-1 col-form-label d-flex pb-0 pr-md-0">
         </div>
-        <div class="col-md-2 col-form-label d-flex pb-0 pr-md-0"> 
+        <div class="col-md-2 col-form-label d-flex pb-0 pr-md-0">
             <label id="id_bannertype_label" class="d-inline word-break" for="id_bannertype">
                 Export Type
             </label>
