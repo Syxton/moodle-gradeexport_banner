@@ -125,6 +125,7 @@ class grade_export_xls extends grade_export {
                     if (is_numeric($gradestr)) {
                         $myxls->write_number($i, $j++, $gradestr);
                     } else {
+                        $gradestr = $gradestr == "-" ? null : $gradestr;
                         $myxls->write_string($i, $j++, $gradestr);
                     }
                 }
