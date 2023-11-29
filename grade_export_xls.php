@@ -71,30 +71,28 @@ class grade_export_xls extends grade_export {
         $myxls = $workbook->add_worksheet($strgrades);
 
         // Print names of all the fields.
-        $profilefieldsfirst = [(object)["fullname" => "Term Code", "customid" => true, "default" => $term],
-                                (object)["fullname" => "CRN", "customid" => true, "default" => $crn],
-                                (object)["fullname" => "Student ID", "shortname" => "idnumber"],
+        $firstprofilefields = [(object)["fullname" => "Term Code", "customid" => true, "default" => $term],
+                               (object)["fullname" => "CRN", "customid" => true, "default" => $crn],
+                               (object)["fullname" => "Student ID", "shortname" => "idnumber"],
         ];
 
-        foreach ($profilefieldsfirst as $id => $field) {
+        foreach ($firstprofilefields as $id => $field) {
             $myxls->write_string(0, $id, $field->fullname);
         }
 
-        $pos = count($profilefieldsfirst);
+        $pos = count($firstprofilefields);
         $gradetype = $btype == 1 ? "Midterm Grade" : "Final Grade";
         $myxls->write_string(0, $pos++, $gradetype);
 
-        if ($btype !== 1) { // Only on Final Grade export types.
-            // Print names of all the fields.
-            $profilefieldssecond = [(object)["fullname" => "Last Attended Date", "customid" => true, "default" => ""],
-                                    (object)["fullname" => "Incomplete Final Grade", "customid" => true, "default" => ""],
-                                    (object)["fullname" => "Extension Date", "customid" => true, "default" => ""],
-            ];
-
-            foreach ($profilefieldssecond as $id => $field) {
-                $myxls->write_string(0, $pos++, $field->fullname);
-            }
+        // Print custom field titles on Final Grade export types.
+        if ($btype !== 1) {
+            $myxls->write_string(0, $pos++, "Last Attended Date");
+            $myxls->write_string(0, $pos++, "Incomplete Final Grade");
+            $myxls->write_string(0, $pos++, "Extension Date");
         }
+
+        // Print custom field titles on all export types.
+        $myxls->write_string(0, $pos++, "Narrative Grade Comment");
 
         // Print all the lines of data.
         $i = 0;
@@ -107,11 +105,11 @@ class grade_export_xls extends grade_export {
             $i++;
             $user = $userdata->user;
 
-            foreach ($profilefieldsfirst as $id => $field) {
+            foreach ($firstprofilefields as $id => $field) {
                 $fieldvalue = grade_helper::get_user_field_value($user, $field);
                 $myxls->write_string($i, $id, $fieldvalue);
             }
-            $j = count($profilefieldsfirst);
+            $j = count($firstprofilefields);
             if (!$this->onlyactive) {
                 $issuspended = ($user->suspendedenrolment) ? get_string('yes') : '';
                 $myxls->write_string($i, $j++, $issuspended);
@@ -131,15 +129,20 @@ class grade_export_xls extends grade_export {
                 }
             }
 
-            if ($btype !== 1) { // Only on Final Grade export types.
+            // Only on Final Grade export types.
+            if ($btype !== 1) {
                 // Last attended blank.
-                $myxls->write_string($i, $j++, "");
+                $myxls->write_string($i, $j++, null);
                 // Incomplete Final Grade blank.
-                $myxls->write_string($i, $j++, "");
+                $myxls->write_string($i, $j++, null);
                 // Extension Date.
-                $myxls->write_string($i, $j++, "");
+                $myxls->write_string($i, $j++, null);
             }
+
+            // Narrative Grade Comment.
+            $myxls->write_string($i, $j++, null);
         }
+
         $gui->close();
         $geub->close();
 
