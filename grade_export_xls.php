@@ -54,7 +54,7 @@ class grade_export_xls extends grade_export {
                    AND enrol = "meta" 
                    AND status = 0 
                    AND id IN (SELECT enrolid
-                                FROM mdl_user_enrolments
+                                FROM {user_enrolments}
                                WHERE userid = :userid
                                  AND status = 0)
                  LIMIT 1';
