@@ -40,6 +40,33 @@ class grade_export_xls extends grade_export {
     }
 
     /**
+     * Does the user have an active meta enrollment in the course.
+     * @param int $userid ID of user we are checking.
+     * @param int $courseid ID of the course we are checking.
+     * @return stdClass Course record of of active enrollment.
+     */
+    public function has_active_meta_enrol_in_course(int $userid, int $courseid) {
+        global $DB;
+
+        $sql = 'SELECT customint1 as fromcourse
+                  FROM {enrol}
+                 WHERE courseid = :coureid
+                   AND enrol = "meta" 
+                   AND status = 0 
+                   AND id IN (SELECT enrolid
+                                FROM mdl_user_enrolments
+                               WHERE userid = :userid
+                                 AND status = 0)
+                 LIMIT 1';
+
+        if ($enrolment = $DB->get_record_sql($sql, ['coureid'  => $courseid, 'userid'  => $userid])) {
+            return get_course($enrolment->fromcourse);
+        }
+
+        return false;
+    }
+
+    /**
      * To be implemented by child classes
      * @param int $btype Midterm or Final Grade type export.
      */
@@ -58,11 +85,6 @@ class grade_export_xls extends grade_export {
         $shortname = format_string($this->course->shortname, true, ['context' => context_course::instance($this->course->id)]);
         $downloadfilename = clean_filename("$shortname $strgrades.xls");
 
-        // Get term and CRN.
-        $coursecodes = explode("-", $this->course->idnumber);
-        $term = $coursecodes[0];
-        $crn = $coursecodes[1];
-
         // Creating a workbook.
         $workbook = new MoodleExcelWorkbook("-");
         // Sending HTTP headers.
@@ -71,8 +93,8 @@ class grade_export_xls extends grade_export {
         $myxls = $workbook->add_worksheet($strgrades);
 
         // Print names of all the fields.
-        $firstprofilefields = [(object)["fullname" => "Term Code", "customid" => true, "default" => $term],
-                               (object)["fullname" => "CRN", "customid" => true, "default" => $crn],
+        $firstprofilefields = [(object)["fullname" => "Term Code", "customid" => true, "default" => ""],
+                               (object)["fullname" => "CRN", "customid" => true, "default" => ""],
                                (object)["fullname" => "Student ID", "shortname" => "idnumber"],
         ];
 
@@ -91,8 +113,8 @@ class grade_export_xls extends grade_export {
             $myxls->write_string(0, $pos++, "Extension Date");
         }
 
-        // Print custom field titles on all export types.
-        $myxls->write_string(0, $pos++, "Narrative Grade Comment");
+        // Print custom field titles on all export types. Removed due to Banner bug.
+        //$myxls->write_string(0, $pos++, "Narrative Grade Comment");
 
         // Print all the lines of data.
         $i = 0;
@@ -106,9 +128,29 @@ class grade_export_xls extends grade_export {
             $user = $userdata->user;
 
             foreach ($firstprofilefields as $id => $field) {
-                $fieldvalue = grade_helper::get_user_field_value($user, $field);
+                $fieldvalue = null;
+                if ($field->fullname == "Student ID") {
+                    $fieldvalue = grade_helper::get_user_field_value($user, $field);
+                } else {
+                    // Get real active course.
+                    if (!$realcourse = $this->has_active_meta_enrol_in_course($user->id, $this->course->id)) {
+                        $realcourse = $this->course;
+                    }
+
+                    // Get term and CRN.
+                    $coursecodes = explode("-", $realcourse->idnumber);
+
+                    if (count($coursecodes) > 1) {
+                        if ($field->fullname == "CRN") {
+                            $fieldvalue = $coursecodes[1];
+                        } else {
+                            $fieldvalue = $coursecodes[0];
+                        }
+                    }
+                }
                 $myxls->write_string($i, $id, $fieldvalue);
             }
+
             $j = count($firstprofilefields);
             if (!$this->onlyactive) {
                 $issuspended = ($user->suspendedenrolment) ? get_string('yes') : '';
@@ -139,8 +181,8 @@ class grade_export_xls extends grade_export {
                 $myxls->write_string($i, $j++, null);
             }
 
-            // Narrative Grade Comment.
-            $myxls->write_string($i, $j++, null);
+            // Narrative Grade Comment. Removed due to Banner bug.
+            //$myxls->write_string($i, $j++, null);
         }
 
         $gui->close();
