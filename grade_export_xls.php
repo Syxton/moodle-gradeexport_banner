@@ -51,8 +51,8 @@ class grade_export_xls extends grade_export {
         $sql = 'SELECT customint1 as fromcourse
                   FROM {enrol}
                  WHERE courseid = :coureid
-                   AND enrol = "meta" 
-                   AND status = 0 
+                   AND enrol = "meta"
+                   AND status = 0
                    AND id IN (SELECT enrolid
                                 FROM {user_enrolments}
                                WHERE userid = :userid
@@ -112,9 +112,6 @@ class grade_export_xls extends grade_export {
             $myxls->write_string(0, $pos++, "Incomplete Final Grade");
             $myxls->write_string(0, $pos++, "Extension Date");
         }
-
-        // Print custom field titles on all export types. Removed due to Banner bug.
-        //$myxls->write_string(0, $pos++, "Narrative Grade Comment");
 
         // Print all the lines of data.
         $i = 0;
@@ -180,9 +177,6 @@ class grade_export_xls extends grade_export {
                 // Extension Date.
                 $myxls->write_string($i, $j++, null);
             }
-
-            // Narrative Grade Comment. Removed due to Banner bug.
-            //$myxls->write_string($i, $j++, null);
         }
 
         $gui->close();
