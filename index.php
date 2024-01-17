@@ -88,6 +88,10 @@ echo '<div style="display: none">';
 $mform->display();
 echo '</div>';
 
+if (!$totalgrade = $DB->get_record('grade_items', ['courseid' => $COURSE->id, 'itemtype' => 'course'])) {
+    throw new \moodle_exception('invalidcourseid');
+}
+
 echo '<div style="text-align:center">
         <button class="bannerbutton btn btn-primary"
                 style="display: none;"
@@ -115,7 +119,7 @@ echo '<div style="text-align:center">
             $("input:checkbox#id_export_onlyactive").prop("checked", true);
 
             // Only Course total.
-            $("#id_gradeitemscontainer input:checkbox:last").prop("checked", true);
+            $("#id_gradeitemscontainer input:checkbox[name=\'itemids[' . $totalgrade->id . ']\']").prop("checked", true);
 
             // Enable submit button.
             $(".bannerbutton").show();
