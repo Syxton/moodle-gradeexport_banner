@@ -111,6 +111,7 @@ class grade_export_xls extends grade_export {
             $myxls->write_string(0, $pos++, "Last Attended Date");
             $myxls->write_string(0, $pos++, "Incomplete Final Grade");
             $myxls->write_string(0, $pos++, "Extension Date");
+            $myxls->write_string(0, $pos++, "Narrative Grade Comment");
         }
 
         // Print all the lines of data.
@@ -175,6 +176,8 @@ class grade_export_xls extends grade_export {
                 // Incomplete Final Grade blank.
                 $myxls->write_string($i, $j++, null);
                 // Extension Date.
+                $myxls->write_string($i, $j++, null);
+                // Narrative Grade Comment.
                 $myxls->write_string($i, $j++, null);
             }
         }
