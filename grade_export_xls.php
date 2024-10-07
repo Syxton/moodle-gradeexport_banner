@@ -16,14 +16,14 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/grade/export/lib.php');
+require_once $CFG->dirroot . '/grade/export/lib.php';
 
 /**
  * Export for xls files.
  *
- * @package   gradeexport_banner
- * @copyright  2023 Matt Davidson
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package gradeexport_banner
+ * @author  2023 Matt Davidson
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class grade_export_xls extends grade_export {
     /**
