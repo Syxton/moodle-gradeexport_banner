@@ -18,7 +18,7 @@ require(['jquery'], function (jQuery) {
         jQuery("input:checkbox#id_export_onlyactive").prop("checked", true);
 
         // Only Course total.
-        let items = ":checkbox[name=\'itemids[id]\']";
+        let items = ":checkbox[name=\'itemids[" + id + "]\']";
         jQuery("#id_gradeitemscontainer input" + items).prop("checked", true);
 
         // Enable submit button.
